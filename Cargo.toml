@@ -1,0 +1,18 @@
+[package]
+name = "aqi"
+description = "Functions for calculating Air Quality Index values"
+version = "0.1.0"
+authors = ["Brian J. Tarricone <brian@tarricone.org>"]
+homepage = "https://github.com/kelnos/aqi-rs"
+repository = "https://github.com/kelnos/aqi-rs"
+license = "Apache-2.0"
+readme = "README.md"
+categories = ["no-std", "science"]
+keywords = ["air-quality", "aqi"]
+edition = "2018"
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
