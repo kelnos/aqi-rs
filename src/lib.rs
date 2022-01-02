@@ -240,7 +240,7 @@ pub fn pm2_5(concentration: f64) -> Option<AirQuality> {
 /// * `concentration` - The 24-hour PM2.5 concentration in µg/m³
 /// * `humidity` - Relative humidity % (between 0.0 - 1.0)
 pub fn pm2_5_epa(concentration: f64, humidity: f64) -> Option<AirQuality> {
-    if humidity >= 0.0 && humidity <= 1.0 {
+    if (0.0..=1.0).contains(&humidity) {
         calc_aqi(&PM25_BREAKPOINTS, trunc(0.52 * concentration - 0.085 * humidity + 5.71, 1))
     } else {
         None
