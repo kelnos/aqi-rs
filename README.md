@@ -21,7 +21,7 @@ For further information, see [AQI basics][aqi-info] and [AQI techinical
 assistance][aqi-detail].
 
 Additionally, this library supports "adjusted" PM2.5 AQI values, using
-the LRAPA and AQandU conversion formulas.
+the LRAPA, EPA and AQandU conversion formulas.
 
 [crates-shield]: https://img.shields.io/crates/v/aqi.svg
 [crates-url]: https://crates.io/crates/aqi
