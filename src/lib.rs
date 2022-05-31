@@ -56,6 +56,20 @@ pub enum AirQualityLevel {
     Hazardous,
 }
 
+impl fmt::Display for AirQualityLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use AirQualityLevel::*;
+        match self {
+            Good => f.write_str("Good"),
+            Moderate => f.write_str("Moderate"),
+            UnhealthySensitive => f.write_str("Unhealthy for sensitive groups"),
+            Unhealthy => f.write_str("Unhealthy"),
+            VeryUnhealthy => f.write_str("Very unhealthy"),
+            Hazardous => f.write_str("Hazardous"),
+        }
+    }
+}
+
 macro_rules! def_try_from_aq {
     ($tpe:ty) => {
         impl TryFrom<$tpe> for AirQualityLevel {
@@ -103,6 +117,12 @@ impl AirQuality {
 
     pub fn level(&self) -> AirQualityLevel {
         self.level
+    }
+}
+
+impl fmt::Display for AirQuality {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "AQI: {}, {}", self.aqi, self.level)
     }
 }
 
