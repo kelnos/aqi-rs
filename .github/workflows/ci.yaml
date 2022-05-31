@@ -1,10 +1,12 @@
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - main
+  pull_request: {}
 name: CI
 jobs:
-  clippy:
-    name: clippy
+  janitorial:
+    name: janitorial
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -19,6 +21,10 @@ jobs:
           toolchain: stable
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-targets --all-features -- -D warnings
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --check
   test:
     name: test
     runs-on: ubuntu-latest
@@ -26,11 +32,15 @@ jobs:
       matrix:
         rust:
           - stable
-          - 1.40.0
+          - 1.56.0
         target:
           - arm-unknown-linux-gnueabihf
           - armv7-unknown-linux-gnueabihf
+          - aarch64-unknown-linux-gnu
           - x86_64-unknown-linux-gnu
+        feature_args:
+          - ''
+          - '--features std'
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -42,4 +52,4 @@ jobs:
         with:
           use-cross: true
           command: test
-          args: --release --target=${{ matrix.target }}
+          args: --release --target=${{ matrix.target }} ${{ matrix.feature_args }}
