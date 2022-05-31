@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #![doc = include_str!("../README.md")]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 use core::convert::TryFrom;
 
@@ -439,13 +440,12 @@ fn find_breakpoint(breakpoints: &[Breakpoint], concentration: f64) -> Option<&Br
 
 fn calc_aqi(breakpoints: &[Breakpoint], concentration: f64) -> Option<AirQuality> {
     find_breakpoint(breakpoints, concentration).map(|breakpoint| {
-        let aqi = (((breakpoint.aqi_high as f64 - breakpoint.aqi_low as f64)
+        let aqi = ((breakpoint.aqi_high as f64 - breakpoint.aqi_low as f64)
             / (breakpoint.conc_high - breakpoint.conc_low))
             * (concentration - breakpoint.conc_low)
-            + (breakpoint.aqi_low as f64))
-            .round() as u32;
+            + (breakpoint.aqi_low as f64);
         AirQuality {
-            aqi,
+            aqi: round(aqi),
             level: breakpoint.level,
         }
     })
@@ -612,6 +612,24 @@ pub fn no2(concentration: f64) -> Option<AirQuality> {
     calc_aqi(&NO2_BREAKPOINTS, trunc(concentration, 0))
 }
 
+fn round(val: f64) -> u32 {
+    #[cfg(feature = "std")]
+    let res = val.round() as u32;
+
+    #[cfg(not(feature = "std"))]
+    let res = {
+        let whole = val as u32;
+        let frac = val - (whole as f64);
+        if frac >= 0.5 {
+            whole + 1
+        } else {
+            whole
+        }
+    };
+
+    res
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -646,5 +664,12 @@ mod tests {
         for (conc, aqi) in test_data.iter() {
             assert_eq!(Some(*aqi), pm2_5(*conc).map(|aq| aq.aqi));
         }
+    }
+
+    #[test]
+    fn test_round() {
+        assert_eq!(round(4.5), 5);
+        assert_eq!(round(123.3), 123);
+        assert_eq!(round(84.9), 85);
     }
 }
