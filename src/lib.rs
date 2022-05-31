@@ -87,9 +87,23 @@ def_try_from_aq!(i64);
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct AirQuality {
     /// The numerical AQI value, in a range between 0 and 500
-    pub aqi: u32,
+    aqi: u32,
     /// The human-friendly interpretation of the numeric AQI value
-    pub level: AirQualityLevel,
+    level: AirQualityLevel,
+}
+
+impl AirQuality {
+    pub fn new(aqi: u32, level: AirQualityLevel) -> Self {
+        Self { aqi, level }
+    }
+
+    pub fn aqi(&self) -> u32 {
+        self.aqi
+    }
+
+    pub fn level(&self) -> AirQualityLevel {
+        self.level
+    }
 }
 
 struct Breakpoint {
