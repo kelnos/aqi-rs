@@ -15,7 +15,28 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use core::convert::TryFrom;
+use core::{convert::TryFrom, fmt};
+
+/// Error type for air quality calculations
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AirQualityError {
+    /// The value provided was not in the range covered by the selected AQI calculation
+    OutOfRange,
+}
+
+impl fmt::Display for AirQualityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AirQualityError::OutOfRange => f.write_str("Value is out of range for AQI"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for AirQualityError {}
+
+/// Result type for air quality calculations
+pub type Result<R> = core::result::Result<R, AirQualityError>;
 
 /// Represents the human-friendly interpretation of the AQI
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -38,8 +59,8 @@ pub enum AirQualityLevel {
 macro_rules! def_try_from_aq {
     ($tpe:ty) => {
         impl TryFrom<$tpe> for AirQualityLevel {
-            type Error = &'static str;
-            fn try_from(v: $tpe) -> Result<Self, Self::Error> {
+            type Error = AirQualityError;
+            fn try_from(v: $tpe) -> Result<Self> {
                 use AirQualityLevel::*;
                 match v {
                     0..=50 => Ok(Good),
@@ -48,7 +69,7 @@ macro_rules! def_try_from_aq {
                     151..=200 => Ok(Unhealthy),
                     201..=300 => Ok(VeryUnhealthy),
                     301..=500 => Ok(Hazardous),
-                    _ => Err("Value is out of range for AQI"),
+                    _ => Err(AirQualityError::OutOfRange),
                 }
             }
         }
@@ -62,7 +83,7 @@ def_try_from_aq!(i32);
 def_try_from_aq!(u64);
 def_try_from_aq!(i64);
 
-/// Result type for AQI calculations
+/// Calucated AQI and human-readable level
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct AirQuality {
     /// The numerical AQI value, in a range between 0 and 500
@@ -438,17 +459,19 @@ fn find_breakpoint(breakpoints: &[Breakpoint], concentration: f64) -> Option<&Br
     })
 }
 
-fn calc_aqi(breakpoints: &[Breakpoint], concentration: f64) -> Option<AirQuality> {
-    find_breakpoint(breakpoints, concentration).map(|breakpoint| {
+fn calc_aqi(breakpoints: &[Breakpoint], concentration: f64) -> Result<AirQuality> {
+    if let Some(breakpoint) = find_breakpoint(breakpoints, concentration) {
         let aqi = ((breakpoint.aqi_high as f64 - breakpoint.aqi_low as f64)
             / (breakpoint.conc_high - breakpoint.conc_low))
             * (concentration - breakpoint.conc_low)
             + (breakpoint.aqi_low as f64);
-        AirQuality {
+        Ok(AirQuality {
             aqi: round(aqi),
             level: breakpoint.level,
-        }
-    })
+        })
+    } else {
+        Err(AirQualityError::OutOfRange)
+    }
 }
 
 fn trunc(value: f64, nplaces: u32) -> f64 {
@@ -465,7 +488,7 @@ fn trunc(value: f64, nplaces: u32) -> f64 {
 /// # Arguments
 ///
 /// * `concentration` - The 8-hour ozone concentration in ppm
-pub fn ozone8(concentration: f64) -> Option<AirQuality> {
+pub fn ozone8(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&OZONE8_BREAKPOINTS, trunc(concentration, 3))
 }
 
@@ -478,7 +501,7 @@ pub fn ozone8(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 1-hour ozone concentration in ppm
-pub fn ozone1(concentration: f64) -> Option<AirQuality> {
+pub fn ozone1(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&OZONE1_BREAKPOINTS, trunc(concentration, 3))
 }
 
@@ -489,7 +512,7 @@ pub fn ozone1(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 24-hour PM2.5 concentration in µg/m³
-pub fn pm2_5(concentration: f64) -> Option<AirQuality> {
+pub fn pm2_5(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&PM25_BREAKPOINTS, trunc(concentration, 1))
 }
 
@@ -507,14 +530,14 @@ pub fn pm2_5(concentration: f64) -> Option<AirQuality> {
 ///
 /// * `concentration` - The 24-hour PM2.5 concentration in µg/m³
 /// * `humidity` - Relative humidity % (between 0.0 - 1.0)
-pub fn pm2_5_epa(concentration: f64, humidity: f64) -> Option<AirQuality> {
+pub fn pm2_5_epa(concentration: f64, humidity: f64) -> Result<AirQuality> {
     if (0.0..=1.0).contains(&humidity) {
         calc_aqi(
             &PM25_BREAKPOINTS,
             trunc(0.52 * concentration - 0.085 * humidity + 5.71, 1),
         )
     } else {
-        None
+        Err(AirQualityError::OutOfRange)
     }
 }
 
@@ -531,11 +554,11 @@ pub fn pm2_5_epa(concentration: f64, humidity: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 24-hour PM2.5 concentration in µg/m³
-pub fn pm2_5_lrapa(concentration: f64) -> Option<AirQuality> {
+pub fn pm2_5_lrapa(concentration: f64) -> Result<AirQuality> {
     if concentration <= 65.0 {
         calc_aqi(&PM25_BREAKPOINTS, trunc(0.5 * concentration - 0.66, 1))
     } else {
-        None
+        Err(AirQualityError::OutOfRange)
     }
 }
 
@@ -551,7 +574,7 @@ pub fn pm2_5_lrapa(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 24-hour PM2.5 concentration in µg/m³
-pub fn pm2_5_aqandu(concentration: f64) -> Option<AirQuality> {
+pub fn pm2_5_aqandu(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&PM25_BREAKPOINTS, trunc(0.778 * concentration + 2.65, 1))
 }
 
@@ -562,7 +585,7 @@ pub fn pm2_5_aqandu(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 24-hour PM10 concentration in µg/m³
-pub fn pm10(concentration: f64) -> Option<AirQuality> {
+pub fn pm10(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&PM10_BREAKPOINTS, concentration as u32 as f64)
 }
 
@@ -573,7 +596,7 @@ pub fn pm10(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 8-hour CO concentration in ppm
-pub fn co(concentration: f64) -> Option<AirQuality> {
+pub fn co(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&CO_BREAKPOINTS, trunc(concentration, 1))
 }
 
@@ -586,7 +609,7 @@ pub fn co(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 1-hour SO₂ concentration in ppb
-pub fn so2_1(concentration: f64) -> Option<AirQuality> {
+pub fn so2_1(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&SO2_1_BREAKPOINTS, trunc(concentration, 0))
 }
 
@@ -597,7 +620,7 @@ pub fn so2_1(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 24-hour SO₂ concentration in ppb
-pub fn so2_24(concentration: f64) -> Option<AirQuality> {
+pub fn so2_24(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&SO2_24_BREAKPOINTS, trunc(concentration, 0))
 }
 
@@ -608,7 +631,7 @@ pub fn so2_24(concentration: f64) -> Option<AirQuality> {
 /// # Arguments
 ///
 /// * `concentration` - The 1-hour NO₂ concentration in ppb
-pub fn no2(concentration: f64) -> Option<AirQuality> {
+pub fn no2(concentration: f64) -> Result<AirQuality> {
     calc_aqi(&NO2_BREAKPOINTS, trunc(concentration, 0))
 }
 
@@ -662,7 +685,7 @@ mod tests {
         ];
 
         for (conc, aqi) in test_data.iter() {
-            assert_eq!(Some(*aqi), pm2_5(*conc).map(|aq| aq.aqi));
+            assert_eq!(Ok(*aqi), pm2_5(*conc).map(|aq| aq.aqi));
         }
     }
 
