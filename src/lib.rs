@@ -12,26 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The `aqi` crate provides functions for calculating the Air Quality
-//! Index based on concentrations of particuate matter.
-//!
-//! The AQI is defined for ozone (O₃), 1.0-2.5 micron particulate matter
-//! (PM2.5), 2.5-10 micron particulate matter (PM10), carbon monoxide
-//! (CO), sulfur dioxide (SO₂), and nitrogen dioxide (NO₂).
-//!
-//! The AQI helps make air quality more understandable to laypersons,
-//! normalizing air quality on a scale from 0 to 500, with round-number
-//! ranges that indicate qualities such as "Good", "Unhealthy", and
-//! "Hazardous".
-//!
-//! Further details about AQI in general can be found at
-//! [https://www.airnow.gov/aqi/aqi-basics/](https://www.airnow.gov/aqi/aqi-basics/).
-//!
-//! Further details about the AQI equation can be found at
-//! [https://www.airnow.gov/publications/air-quality-index/technical-assistance-document-for-reporting-the-daily-aqi/](https://www.airnow.gov/publications/air-quality-index/technical-assistance-document-for-reporting-the-daily-aqi/).
-//!
-//! Additionally, this library supports "adjusted" PM2.5 AQI values, using
-//! the LRAPA and AQandU conversion formulas.
+#![doc = include_str!("../README.md")]
 
 use core::convert::TryFrom;
 
