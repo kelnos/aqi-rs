@@ -28,7 +28,7 @@ the LRAPA, EPA and AQandU conversion formulas.
 [docs-shield]: https://docs.rs/aqi/badge.svg
 [docs-url]: https://docs.rs/aqi
 [license-shield]: https://img.shields.io/crates/l/aqi.svg
-[license-url]: https://github.com/kelnos/aqi-rs/blob/master/LICENSE
+[license-url]: https://github.com/kelnos/aqi-rs/blob/main/LICENSE
 [build-shield]: https://img.shields.io/github/workflow/status/kelnos/aqi-rs/CI
 [build-url]: https://github.com/kelnos/aqi-rs/actions
 
