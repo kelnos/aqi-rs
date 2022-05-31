@@ -11,6 +11,9 @@ categories = ["no-std", "science"]
 keywords = ["air-quality", "aqi"]
 edition = "2021"
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 default = []
 std = []
