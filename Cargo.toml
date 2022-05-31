@@ -1,7 +1,7 @@
 [package]
 name = "aqi"
 description = "Functions for calculating Air Quality Index values"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Brian J. Tarricone <brian@tarricone.org>"]
 homepage = "https://github.com/kelnos/aqi-rs"
 repository = "https://github.com/kelnos/aqi-rs"
