@@ -37,6 +37,9 @@ jobs:
           - arm-unknown-linux-gnueabihf
           - armv7-unknown-linux-gnueabihf
           - x86_64-unknown-linux-gnu
+        feature_args:
+          - ''
+          - '--features std'
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -48,4 +51,4 @@ jobs:
         with:
           use-cross: true
           command: test
-          args: --release --target=${{ matrix.target }}
+          args: --release --target=${{ matrix.target }} ${{ matrix.feature_args }}
