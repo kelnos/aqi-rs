@@ -32,7 +32,7 @@ jobs:
       matrix:
         rust:
           - stable
-          - 1.40.0
+          - 1.56.0
         target:
           - arm-unknown-linux-gnueabihf
           - armv7-unknown-linux-gnueabihf
